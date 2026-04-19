@@ -124,7 +124,7 @@ print(region_mean_sales, "\n")
 # 8. Візуалізація
 # =========================
 
-# 8.1. Гістограми тільки для числових місячних колонок
+# 8.1. Гістограми продажів по місяцях
 df[months].hist(figsize=(14, 8), bins=10)
 plt.suptitle("Гістограми продажів по місяцях")
 plt.tight_layout()
@@ -148,7 +148,7 @@ plt.grid()
 plt.tight_layout()
 plt.show()
 
-# 8.4. Динаміка середніх продажів по регіонах
+# 8.4. Динаміка середніх продажів за регіонами
 region_mean_sales.T.plot(marker="o", figsize=(12, 6))
 plt.title("Динаміка середніх продажів за регіонами")
 plt.xlabel("Місяць")
@@ -157,7 +157,7 @@ plt.grid()
 plt.tight_layout()
 plt.show()
 
-# 8.5. Загальні річні продажі по регіонах
+# 8.5. Середні річні продажі за регіонами
 region_total = df.groupby("SALES_BY_REGION")["YEARLY_TOTAL"].mean().sort_values(ascending=False)
 region_total.plot(kind="bar", figsize=(8, 5))
 plt.title("Середні річні продажі за регіонами")
@@ -171,14 +171,15 @@ plt.show()
 # =========================
 # 9. Побудова моделі
 # =========================
-# Будемо прогнозувати DECEMBER за попередніми місяцями
+# Будемо прогнозувати річний обсяг продажів
+# за значеннями з січня по листопад
 feature_months = [
     "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
     "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER"
 ]
 
 X = df[feature_months]
-y = df["DECEMBER"]
+y = df["YEARLY_TOTAL"]
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
@@ -194,7 +195,7 @@ mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
 r2 = r2_score(y_test, y_pred)
 
-print("Оцінка моделі прогнозування DECEMBER:")
+print("Оцінка моделі прогнозування YEARLY_TOTAL:")
 print(f"MAE  = {mae:.2f}")
 print(f"MSE  = {mse:.2f}")
 print(f"RMSE = {rmse:.2f}")
@@ -205,8 +206,8 @@ print(f"R2   = {r2:.4f}\n")
 # 10. Порівняння реальних і прогнозованих значень
 # =========================
 results = pd.DataFrame({
-    "Actual_DECEMBER": y_test.values,
-    "Predicted_DECEMBER": y_pred
+    "Actual_YEARLY_TOTAL": y_test.values,
+    "Predicted_YEARLY_TOTAL": y_pred
 })
 
 print("Порівняння реальних та прогнозованих значень:")
@@ -215,11 +216,11 @@ print(results.head(15), "\n")
 results = results.reset_index(drop=True)
 
 plt.figure(figsize=(10, 5))
-plt.plot(results.index, results["Actual_DECEMBER"], marker="o", label="Реальні значення")
-plt.plot(results.index, results["Predicted_DECEMBER"], marker="o", label="Прогноз моделі")
-plt.title("Порівняння реальних і прогнозованих продажів за грудень")
+plt.plot(results.index, results["Actual_YEARLY_TOTAL"], marker="o", label="Реальні значення")
+plt.plot(results.index, results["Predicted_YEARLY_TOTAL"], marker="o", label="Прогноз моделі")
+plt.title("Порівняння реальних і прогнозованих річних продажів")
 plt.xlabel("Номер спостереження у тестовій вибірці")
-plt.ylabel("Продажі")
+plt.ylabel("Річний обсяг продажів")
 plt.legend()
 plt.grid()
 plt.tight_layout()
@@ -238,7 +239,7 @@ print("Коефіцієнти лінійної регресії:")
 print(coef_df, "\n")
 
 coef_df.plot(x="Month", y="Coefficient", kind="bar", figsize=(10, 5))
-plt.title("Вплив місяців на прогноз DECEMBER")
+plt.title("Вплив місяців на прогноз річних продажів")
 plt.xlabel("Місяць")
 plt.ylabel("Коефіцієнт")
 plt.grid(axis="y")
@@ -251,9 +252,9 @@ plt.show()
 # =========================
 average_profile = pd.DataFrame([df[feature_months].mean()])
 
-forecast_december = model.predict(average_profile)[0]
+forecast_yearly_total = model.predict(average_profile)[0]
 
-print(f"Прогноз продажів DECEMBER для середнього профілю: {forecast_december:.2f}\n")
+print(f"Прогноз YEARLY_TOTAL для середнього профілю: {forecast_yearly_total:.2f}\n")
 
 
 # =========================
